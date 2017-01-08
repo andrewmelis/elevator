@@ -18,13 +18,13 @@ const travelUp action = "travelUp"
 const travelDown action = "travelDown"
 
 type Elevator struct {
-	Queue         []action
 	Floor         int
+	Queue         []action
 	PassengerBays []map[*Passenger]bool // one waiting area per floor -- extract me
 	Riders        map[*Passenger]bool   // extract me. should be callback for riding passengers -- something like ElevatorController or ElevatorSimulator?
 }
 
-func NewElevator(floors int) *Elevator {
+func NewElevator(currentFloor, floors int) *Elevator {
 	var queue = make([]action, 0, 2)
 	var bays = make([]map[*Passenger]bool, floors)
 	for i := range bays {
@@ -33,8 +33,8 @@ func NewElevator(floors int) *Elevator {
 	var riders = make(map[*Passenger]bool)
 
 	return &Elevator{
+		Floor:         currentFloor,
 		Queue:         queue,
-		Floor:         0,
 		PassengerBays: bays,
 		Riders:        riders,
 	}
@@ -56,6 +56,8 @@ func (e *Elevator) Tick() {
 		case open:
 			e.allowRidersToExit()
 			e.waitingPassengersEnter()
+		case close:
+			// noop
 		case travelUp:
 			e.Floor++
 		case travelDown:
@@ -67,8 +69,6 @@ func (e *Elevator) Tick() {
 }
 
 func (e *Elevator) Call(p *Passenger, d direction) {
-	// TODO figure out how to add all necessary actions
-	e.Queue = append(e.Queue, open)
 	e.enqueueDestination(p.CurrentFloor)
 
 	e.addWaitingPassenger(p)
@@ -107,7 +107,7 @@ func (e *Elevator) enqueueDestination(destination int) {
 	diff := math.Abs(float64(destination - e.Floor))
 
 	if diff > 0 {
-		e.Queue = append(e.Queue, close) // eww -- how handle open, then no button press?
+		e.Queue = append(e.Queue, close) // eww -- no need to close if already closed?...
 
 		var a action
 		dir := tripDirection(e.Floor, destination)
@@ -122,10 +122,8 @@ func (e *Elevator) enqueueDestination(destination int) {
 			e.Queue = append(e.Queue, a)
 		}
 
-		// close? open?
-		// just hard code open for now
-		e.Queue = append(e.Queue, open)
 	}
+	e.Queue = append(e.Queue, open) // always need to open
 }
 
 // direction is a helper that returns a direction from trip parameters

@@ -9,20 +9,21 @@ const maxTicks = 10
 
 // CAVEAT: either tests must know how many 'ticks' a given set of actions takes,
 //         or the elevator needs to return a list of actions so we can check
-// TODO figure this out. consider testing DSL like Clean Code(ch 9)
+// TODO figure this out. consider testing DSL like Clean Code (ch 9)
 
 func TestSingleRider(t *testing.T) {
 	var singleRiderTests = []struct {
-		nFloors int
-		p       Passenger
+		e Elevator
+		p Passenger
 	}{
-		{2, *NewPassenger(0, 1)},
-		{2, *NewPassenger(1, 0)},
+		{*NewElevator(0, 2), *NewPassenger(0, 1)},
+		{*NewElevator(0, 2), *NewPassenger(1, 0)},
+		{*NewElevator(1, 2), *NewPassenger(0, 1)},
 	}
 
 	for _, tt := range singleRiderTests {
 		t.Logf("=== RUN   %+v\n", tt)
-		pass, output := SingleRiderFixture(tt.nFloors, &tt.p)
+		pass, output := SingleRiderFixture(&tt.e, &tt.p)
 		if !pass {
 			t.Errorf("--- FAIL: %+v! %s\n", tt, output)
 		} else {
@@ -32,13 +33,12 @@ func TestSingleRider(t *testing.T) {
 }
 
 // SingleRiderFixture accepts scenarios and returns error string
-func SingleRiderFixture(nFloors int, p *Passenger) (bool, string) {
-	e := NewElevator(nFloors)
+func SingleRiderFixture(e *Elevator, p *Passenger) (bool, string) {
 	p.Call(e)
 
 	var foundPassengerInTransit bool
 	for i := 0; i < maxTicks; i++ {
-		fmt.Printf("bays: %v | queue: %v\n", e.PassengerBays, e.Queue)
+		fmt.Printf("bays: %v | riders: %v | queue: %v\n", e.PassengerBays, e.Riders, e.Queue)
 		e.Tick() // advance time
 
 		if p.InTransit {
