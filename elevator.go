@@ -20,7 +20,7 @@ type Elevator struct {
 	Queue         []action
 	Floor         int
 	PassengerBays []map[*Passenger]bool // one waiting area per floor -- extract me
-	Riders        map[*Passenger]bool   // extract me. should be callback for riding passengers
+	Riders        map[*Passenger]bool   // extract me. should be callback for riding passengers -- something like ElevatorController or ElevatorSimulator?
 }
 
 func NewElevator(floors int) *Elevator {
@@ -57,7 +57,8 @@ func (e *Elevator) Tick() {
 			e.waitingPassengersEnter()
 		case travelUp:
 			e.Floor++
-
+		default:
+			// noop
 		}
 	}
 }
@@ -100,8 +101,6 @@ func (e *Elevator) waitingPassengersEnter() {
 }
 
 func (e *Elevator) enqueueDestination(destination int) {
-	// add necessary "travel" actions to go from currentFloor to input floor
-	// TODO start with one tick per floor
 	diff := math.Abs(float64(destination - e.Floor))
 
 	if diff > 0 {
