@@ -1,7 +1,9 @@
 package elevator
 
-import "testing"
-import "fmt"
+import (
+	"fmt"
+	"testing"
+)
 
 const maxTicks = 10
 
@@ -9,22 +11,32 @@ const maxTicks = 10
 //         or the elevator needs to return a list of actions so we can check
 // TODO figure this out. consider testing DSL like Clean Code(ch 9)
 
-// Situation:
-// - single rider at floor 0 (ground).
-// - elevator idle, empty at floor 0
-// - rider going up to floor n; n > 0
-func TestElevatorOpensOnBottomFloor(t *testing.T) {
-	nFloors := 2
+func TestSingleRider(t *testing.T) {
+	var singleRiderTests = []struct {
+		nFloors int
+		p       *Passenger
+	}{
+		{2, NewPassenger(0, 1)},
+	}
+
+	for _, tt := range singleRiderTests {
+		if pass, output := SingleRiderFixture(tt.nFloors, tt.p); !pass {
+			t.Errorf(output)
+		}
+	}
+}
+
+// SingleRiderFixture accepts scenarios and returns error string
+func SingleRiderFixture(nFloors int, p *Passenger) (bool, string) {
 	topFloor := nFloors - 1
 	e := NewElevator(nFloors)
 
-	dest := topFloor // CHANGE TO HIGHER NUMBER LATER
-	p := NewPassenger(dest)
-	p.Call(e, up)
+	dest := topFloor
+	p.Call(e)
 
 	var foundPassengerInTransit bool
 	for i := 0; i < maxTicks; i++ {
-		fmt.Printf("bays: %v | queue: %v\n", e.PassengerBays, e.Queue)
+		// fmt.Printf("bays: %v | queue: %v\n", e.PassengerBays, e.Queue)
 		e.Tick() // advance time
 
 		if p.InTransit {
@@ -33,20 +45,21 @@ func TestElevatorOpensOnBottomFloor(t *testing.T) {
 	}
 
 	if e.PassengerBays[p.CurrentFloor][p] {
-		t.Errorf("passenger %v never left elevator bay %v", p, e)
+		return false, fmt.Sprintf("passenger %v never left elevator bay %v", p, e)
 	}
 
 	if !foundPassengerInTransit {
-		t.Errorf("passenger %v never entered elevator %v", p, e)
+		return false, fmt.Sprintf("passenger %v never entered elevator %v", p, e)
 	}
 
 	if p.InTransit {
-		t.Errorf("passenger %v never left elevator %v", p, e)
+		return false, fmt.Sprintf("passenger %v never left elevator %v", p, e)
 	}
 
 	if p.CurrentFloor != dest {
-		t.Errorf("passenger %v did not arrive at destination %d", p, dest)
+		return false, fmt.Sprintf("passenger %v did not arrive at destination %d", p, dest)
 	}
+	return true, ""
 }
 
 // Situation:
