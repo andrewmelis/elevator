@@ -1,7 +1,7 @@
 package elevator
 
 import (
-	_ "fmt"
+	"fmt"
 	"math"
 )
 
@@ -15,6 +15,7 @@ type action string
 const open action = "open" // turn these into types that implement command interface
 const close action = "close"
 const travelUp action = "travelUp"
+const travelDown action = "travelDown"
 
 type Elevator struct {
 	Queue         []action
@@ -57,6 +58,8 @@ func (e *Elevator) Tick() {
 			e.waitingPassengersEnter()
 		case travelUp:
 			e.Floor++
+		case travelDown:
+			e.Floor--
 		default:
 			// noop
 		}
@@ -106,12 +109,36 @@ func (e *Elevator) enqueueDestination(destination int) {
 	if diff > 0 {
 		e.Queue = append(e.Queue, close) // eww -- how handle open, then no button press?
 
+		var a action
+		dir := tripDirection(e.Floor, destination)
+		switch dir {
+		case up:
+			a = travelUp
+		case down:
+			a = travelDown
+		}
+
 		for i := 0; i < int(diff); i++ {
-			e.Queue = append(e.Queue, travelUp)
+			e.Queue = append(e.Queue, a)
 		}
 
 		// close? open?
 		// just hard code open for now
 		e.Queue = append(e.Queue, open)
 	}
+}
+
+// direction is a helper that returns a direction from trip parameters
+// extract me to a helpers file
+func tripDirection(current, destination int) direction {
+	var d direction
+	if current < destination {
+		d = up
+	} else if current > destination {
+		d = down
+	} else {
+		// noop
+		panic(fmt.Sprintf("invalid trip params! current: %d, dest: %d", current, destination))
+	}
+	return d
 }

@@ -1,16 +1,21 @@
 package elevator
 
+import (
+	_ "fmt"
+)
+
 type Passenger struct {
 	CurrentFloor int
 	Destination  int
 	InTransit    bool
 }
 
-func NewPassenger(destination int) *Passenger {
-	return &Passenger{Destination: destination}
+func NewPassenger(currentFloor, destination int) *Passenger {
+	return &Passenger{currentFloor, destination, false}
 }
 
-func (p *Passenger) Call(e *Elevator, d direction) {
+func (p *Passenger) Call(e *Elevator) {
+	d := tripDirection(p.CurrentFloor, p.Destination)
 	e.Call(p, d)
 }
 
